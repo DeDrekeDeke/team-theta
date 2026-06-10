@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,9 @@ public class CvService {
     private final UserRepository userRepository;
     private final CvMapper cvMapper;
     private final CvStorageProperties storageProperties;
+
+    private static final int MAX_TITLE_LENGTH = 255;
+    private static final long MAX_HTML_UPLOAD_BYTES = 1_000_000;
 
     public CvService(
             CvRepository cvRepository,
@@ -91,6 +95,9 @@ public class CvService {
         if (b == null || b.isEmpty()) {
             throw new com.example.cvmanager.common.exception.BadRequestException("HTML file is required", "CV_FILE_REQUIRED");
         }
+        if (b.getSize() > MAX_HTML_UPLOAD_BYTES) {
+            throw new com.example.cvmanager.common.exception.BadRequestException("HTML file is too large", "CV_FILE_TOO_LARGE");
+        }
         String original = b.getOriginalFilename();
         String contentType = b.getContentType();
         boolean looksHtml = false;
@@ -111,6 +118,11 @@ public class CvService {
         try {
             byte[] rawBytes = b.getBytes();
             String html = new String(rawBytes, StandardCharsets.UTF_8);
+            if (html.toLowerCase(Locale.ROOT).contains("<script")) {
+                throw new com.example.cvmanager.common.exception.BadRequestException(
+                    "HTML files with scripts are not accepted", 
+                    "CV_FILE_UNSAFE");
+            }
             String title = a;
             if (title == null || title.isBlank()) {
                 String lower = html.toLowerCase();
@@ -125,6 +137,13 @@ public class CvService {
                 if (title == null || title.isBlank()) {
                     title = "Uploaded CV";
                 }
+            }
+            title = title.trim();
+            if (title.length() > MAX_TITLE_LENGTH) {
+                throw new com.example.cvmanager.common.exception.BadRequestException(
+                    "CV title must be 255 characters or fewer",
+                    "CV_TITLE_TOO_LONG"
+                );
             }
             String cleaned = original == null ? "cv.html" : original;
             cleaned = cleaned.replace("\\", "/");
@@ -169,8 +188,8 @@ public class CvService {
         String value = input == null ? "" : input;
         String normalized = normalizeLegacyText(value);
         String withoutHeader = removeLegacyHeader(normalized);
-        String name = guessLegacyName(withoutHeader);
-        String body = convertLegacyLines(withoutHeader);
+        String name = escapeHtml(guessLegacyName(withoutHeader));
+        String body = convertLegacyLines(escapeHtml(withoutHeader));
         return "<html><body><h1>" + name + "</h1><div>" + body + "</div></body></html>";
     }
 
@@ -201,5 +220,14 @@ public class CvService {
 
     private String convertLegacyLines(String value) {
         return value.replace("\n", "<br>");
+    }
+
+    private String escapeHtml(String value) {
+        return value
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#39;");
     }
 }
