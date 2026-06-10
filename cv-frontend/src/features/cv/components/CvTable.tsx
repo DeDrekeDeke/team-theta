@@ -18,7 +18,7 @@ export function CvTable({ cvs }: CvTableProps) {
           <tr>
             <th>Title</th>
             <th>Owner</th>
-            <th>File</th>
+            <th>Summary</th>
             <th>Updated</th>
           </tr>
         </thead>
@@ -29,7 +29,7 @@ export function CvTable({ cvs }: CvTableProps) {
                 <Link to={`/cvs/${cv.id}`}>{cv.title}</Link>
               </td>
               <td>{cv.ownerEmail}</td>
-              <td>{cv.uploadedHtmlFilePath}</td>
+              <td>{cv.summary || 'No summary'}</td>
               <td>{formatDateTime(cv.updatedAt)}</td>
             </tr>
           ))}

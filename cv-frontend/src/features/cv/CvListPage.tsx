@@ -62,8 +62,8 @@ export function CvListPage() {
     <section className="page-section">
       <PageHeader
         title="CVs"
-        description="AS-IS list of all CVs returned by the backend."
-        actions={<Link className="button primary" to="/upload">Upload CV</Link>}
+        description="Structured CVs available to the current user."
+        actions={<Link className="button primary" to="/create">Create CV</Link>}
       />
 
       <form className="toolbar" onSubmit={handleSearch}>

@@ -7,14 +7,14 @@ import { LoadingState } from '../../components/LoadingState';
 import { PageHeader } from '../../components/PageHeader';
 import { AiActionPanel } from '../ai/AiActionPanel';
 import { getCurrentUser } from '../auth/authStore';
-import { archiveCv, Cv, getCv, getCvHtml, getCvHtmlUrl, updateCv } from './cvApi';
+import { archiveCv, Cv, getCv, updateCv } from './cvApi';
 
 export function CvDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [cv, setCv] = useState<Cv | null>(null);
-  const [html, setHtml] = useState('');
   const [title, setTitle] = useState('');
+  const [summary, setSummary] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [archiving, setArchiving] = useState(false);
@@ -25,7 +25,7 @@ export function CvDetailPage() {
     }
 
     getCv(id)
-      .then(async (loadedCv) => {
+      .then((loadedCv) => {
         const user = getCurrentUser();
 
         if (!user) {
@@ -36,10 +36,9 @@ export function CvDetailPage() {
           throw new Error('You can only view your own CVs');
         }
 
-        const loadedHtml = await getCvHtml(id);
         setCv(loadedCv);
         setTitle(loadedCv.title);
-        setHtml(loadedHtml);
+        setSummary(loadedCv.summary ?? '');
       })
       .catch((exception) => setError(exception instanceof Error ? exception.message : 'Could not load CV'));
   }, [id]);
@@ -57,10 +56,11 @@ export function CvDetailPage() {
     try {
       const updatedCv = await updateCv(cv.id, {
         title,
-        uploadedHtmlFilePath: cv.uploadedHtmlFilePath
+        summary
       });
       setCv(updatedCv);
       setTitle(updatedCv.title);
+      setSummary(updatedCv.summary ?? '');
     } catch (exception) {
       setError(exception instanceof Error ? exception.message : 'Could not update CV');
     } finally {
@@ -101,6 +101,16 @@ export function CvDetailPage() {
         <FormField label="Title" htmlFor="title">
           <TextInput id="title" value={title} onChange={(event) => setTitle(event.target.value)} />
         </FormField>
+        <label className="form-field" htmlFor="summary">
+          <span>Summary</span>
+          <textarea
+            id="summary"
+            className="text-input"
+            rows={6}
+            value={summary}
+            onChange={(event) => setSummary(event.target.value)}
+          />
+        </label>
 
         <div className="toolbar">
           <Button type="submit" disabled={saving || !title.trim()}>
@@ -115,12 +125,12 @@ export function CvDetailPage() {
       <div className="detail-grid">
         <div className="panel">
           <div className="panel-header">
-            <h3>Uploaded HTML Content</h3>
-            <a className="button secondary" href={getCvHtmlUrl(cv.id)} target="_blank" rel="noreferrer">
-              Open raw HTML
-            </a>
+            <h3>CV Preview</h3>
           </div>
-          <div className="html-render" dangerouslySetInnerHTML={{ __html: html }} />
+          <div className="cv-preview">
+            <h2>{cv.title}</h2>
+            {cv.summary ? <p>{cv.summary}</p> : <p className="muted">No summary added yet.</p>}
+          </div>
         </div>
         <AiActionPanel cvId={cv.id} />
       </div>

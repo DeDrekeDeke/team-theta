@@ -4,7 +4,7 @@ import { AUTH_CHANGED_EVENT, getCurrentUser, logout } from '../features/auth/aut
 
 const navItems = [
   { to: '/', label: 'CVs' },
-  { to: '/upload', label: 'Upload' },
+  { to: '/create', label: 'Create' },
   { to: '/admin/settings', label: 'Settings' }
 ];
 

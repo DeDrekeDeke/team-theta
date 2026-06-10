@@ -13,7 +13,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <CvListPage /> },
       { path: 'login', element: <LoginPage /> },
-      { path: 'upload', element: <CvUploadPage /> },
+      { path: 'create', element: <CvUploadPage /> },
       { path: 'cvs/:id', element: <CvDetailPage /> },
       { path: 'admin/settings', element: <SettingsPage /> }
     ]

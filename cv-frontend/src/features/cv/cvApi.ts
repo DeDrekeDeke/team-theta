@@ -1,15 +1,20 @@
-import { apiRequest, API_BASE_URL } from '../../app/apiClient';
-import { getAuthToken } from '../auth/authStore';
+import { apiRequest } from '../../app/apiClient';
 
 export type Cv = {
   id: number;
   ownerUserId: number;
   ownerEmail: string;
   title: string;
-  uploadedHtmlFilePath: string;
+  summary: string | null;
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;
+};
+
+export type CvCreateRequest = {
+  ownerUserId: number;
+  title: string;
+  summary: string;
 };
 
 export function listCvs() {
@@ -24,33 +29,16 @@ export function getCv(id: string) {
   return apiRequest<Cv>(`/api/cvs/${id}`);
 }
 
-export function getCvHtmlUrl(id: number | string) {
-  return `${API_BASE_URL}/api/cvs/${id}/html`;
-}
-
-export async function getCvHtml(id: number | string) {
-  const token = getAuthToken();
-  const response = await fetch(getCvHtmlUrl(id), {
-    headers: token ? { Authorization: `Bearer ${token}` } : {}
-  });
-
-  if (!response.ok) {
-    throw new Error(`Could not load uploaded HTML: ${response.status}`);
-  }
-
-  return response.text();
-}
-
-export function uploadCv(formData: FormData) {
-  return apiRequest<Cv>('/api/cvs/upload', {
+export function createCv(request: CvCreateRequest) {
+  return apiRequest<Cv>('/api/cvs', {
     method: 'POST',
-    body: formData
+    body: JSON.stringify(request)
   });
 }
 
 export type CvUpdateRequest = {
   title: string;
-  uploadedHtmlFilePath: string;
+  summary: string;
 };
 
 export function updateCv(id: number | string, request: CvUpdateRequest) {
