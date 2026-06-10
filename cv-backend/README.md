@@ -91,12 +91,18 @@ Admin/settings endpoints:
 ```text
 GET /api/admin/settings
 PUT /api/admin/settings/{key}
-POST /api/users
-GET /api/users
-GET /api/users/{id}
 ```
 
-Admin user creation:
+Admin/user endpoints:
+
+```text
+GET  /api/users
+GET  /api/users/{id}
+POST /api/users
+PUT  /api/users/{id}
+```
+
+User creation:
 
 ```http
 POST /api/users

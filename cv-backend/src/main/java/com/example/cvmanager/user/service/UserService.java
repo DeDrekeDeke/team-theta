@@ -4,6 +4,7 @@ import com.example.cvmanager.common.exception.BadRequestException;
 import com.example.cvmanager.common.exception.NotFoundException;
 import com.example.cvmanager.user.dto.UserCreateRequest;
 import com.example.cvmanager.user.dto.UserResponse;
+import com.example.cvmanager.user.dto.UserUpdateRequest;
 import com.example.cvmanager.user.model.UserAccount;
 import com.example.cvmanager.user.repository.UserRepository;
 import java.util.List;
@@ -33,13 +34,11 @@ public class UserService {
 
     @Transactional
     public UserResponse createUser(UserCreateRequest request) {
-        String normalizedEmail = request.email().trim().toLowerCase(Locale.ROOT);
-        if (userRepository.findByEmailIgnoreCase(normalizedEmail).isPresent()) {
-            throw new BadRequestException("User with this email already exists", "USER_EMAIL_EXISTS");
-        }
+        String email = normalizeEmail(request.email());
+        ensureEmailAvailable(email, null);
 
         UserAccount user = new UserAccount(
-                normalizedEmail,
+                email,
                 request.displayName().trim(),
                 passwordEncoder.encode(request.password()),
                 false);
@@ -52,6 +51,39 @@ public class UserService {
         return userRepository.findById(id)
                 .map(this::toResponse)
                 .orElseThrow(() -> new NotFoundException("User not found", "USER_NOT_FOUND"));
+    }
+
+    @Transactional
+    public UserResponse updateUser(Long id, UserUpdateRequest request) {
+        UserAccount user = userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("User not found", "USER_NOT_FOUND"));
+
+        String email = normalizeEmail(request.email());
+        ensureEmailAvailable(email, id);
+        ensureAnAdminRemains(user, request.admin());
+
+        user.setEmail(email);
+        user.setDisplayName(request.displayName().trim());
+        user.setAdmin(request.admin());
+        return toResponse(userRepository.save(user));
+    }
+
+    private void ensureEmailAvailable(String email, Long currentUserId) {
+        userRepository.findByEmailIgnoreCase(email)
+                .filter(existing -> currentUserId == null || !existing.getId().equals(currentUserId))
+                .ifPresent(existing -> {
+                    throw new BadRequestException("User with this email already exists", "USER_EMAIL_EXISTS");
+                });
+    }
+
+    private void ensureAnAdminRemains(UserAccount user, boolean requestedAdmin) {
+        if (user.isAdmin() && !requestedAdmin && userRepository.countByAdminTrue() <= 1) {
+            throw new BadRequestException("At least one admin user is required", "USER_LAST_ADMIN");
+        }
+    }
+
+    private String normalizeEmail(String email) {
+        return email.trim().toLowerCase(Locale.ROOT);
     }
 
     private UserResponse toResponse(UserAccount user) {

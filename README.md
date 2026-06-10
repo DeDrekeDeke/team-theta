@@ -135,8 +135,17 @@ GET  http://localhost:8080/api/cvs/1
 GET  http://localhost:8080/api/cvs/1/html
 POST http://localhost:8080/api/cvs/upload
 GET  http://localhost:8080/api/admin/settings
+GET  http://localhost:8080/api/users
+POST http://localhost:8080/api/users
+PUT  http://localhost:8080/api/users/1
 POST http://localhost:8080/api/cvs/1/ai-actions/improve-summary
 ```
+
+Integration note for CVM-008:
+
+- User management reuses the `/api/users` endpoints introduced by CVM-001.
+- New-user passwords are stored through the pulled BCrypt `PasswordEncoder`
+  flow, and role updates use the existing `admin` flag on `user_account`.
 
 ## Reset Local Database
 

@@ -144,6 +144,32 @@ input {
   font-weight: 600;
 }
 
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.inline-actions.end {
+  justify-content: flex-end;
+}
+
+.checkbox-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #33404a;
+  font-weight: 600;
+}
+
 .text-input,
 .file-input {
   width: 100%;
@@ -210,6 +236,25 @@ th {
 
 tr:last-child td {
   border-bottom: 0;
+}
+
+.role-badge {
+  display: inline-flex;
+  min-width: 64px;
+  justify-content: center;
+  padding: 4px 8px;
+  border: 1px solid #c5ccd3;
+  border-radius: 999px;
+  background: #f6f7f8;
+  color: #33404a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.role-badge.admin {
+  border-color: #78a9b8;
+  background: #edf8fb;
+  color: #176b87;
 }
 
 .detail-grid {
@@ -322,6 +367,7 @@ tr:last-child td {
   }
 
   .toolbar,
+  .form-grid,
   .detail-grid {
     grid-template-columns: 1fr;
   }

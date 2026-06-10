@@ -1,8 +1,8 @@
 package com.example.cvmanager.auth.service;
 
+import com.example.cvmanager.admin.service.AdminProperties;
 import com.example.cvmanager.auth.dto.LoginRequest;
 import com.example.cvmanager.auth.dto.LoginResponse;
-import com.example.cvmanager.admin.service.AdminProperties;
 import com.example.cvmanager.common.exception.BadRequestException;
 import com.example.cvmanager.common.security.AsIsSecurityProperties;
 import com.example.cvmanager.user.repository.UserRepository;
@@ -42,7 +42,7 @@ public class AuthService {
         }
 
         String token = securityProperties.demoTokenPrefix() + "-" + user.getId();
-        boolean admin = adminProperties.email().equalsIgnoreCase(user.getEmail());
+        boolean admin = user.isAdmin() || adminProperties.email().equalsIgnoreCase(user.getEmail());
         return new LoginResponse(user.getId(), user.getEmail(), user.getDisplayName(), admin, token);
     }
 }

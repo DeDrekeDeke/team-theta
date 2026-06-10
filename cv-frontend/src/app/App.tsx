@@ -2,9 +2,16 @@ import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { AUTH_CHANGED_EVENT, getCurrentUser, logout } from '../features/auth/authStore';
 
-const navItems = [
+type NavItem = {
+  to: string;
+  label: string;
+  adminOnly?: boolean;
+};
+
+const navItems: NavItem[] = [
   { to: '/', label: 'CVs' },
   { to: '/upload', label: 'Upload' },
+  { to: '/admin/users', label: 'Users', adminOnly: true },
   { to: '/admin/settings', label: 'Settings' }
 ];
 
@@ -40,15 +47,17 @@ export function App() {
         </div>
 
         <nav className="nav-list" aria-label="Main navigation">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
-            >
-              {item.label}
-            </NavLink>
-          ))}
+          {navItems
+            .filter((item) => !item.adminOnly || user?.admin)
+            .map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
+              >
+                {item.label}
+              </NavLink>
+            ))}
         </nav>
 
         <div className="sidebar-footer">
