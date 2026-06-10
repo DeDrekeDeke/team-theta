@@ -1,22 +1,11 @@
 package com.example.cvmanager.cv.model;
 
 import com.example.cvmanager.user.model.UserAccount;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+
+import lombok.*;
 
 @Entity
 @Table(name = "cv")
@@ -37,9 +26,14 @@ public class Cv {
     @Setter
     private String title;
 
-    @Column(name = "uploaded_html_file_path", nullable = false, length = 500)
+//    @Column(name = "uploaded_html_file_path", nullable = false, length = 500)
+//    @Setter
+//    private String uploadedHtmlFilePath;
+
+    @Lob
+    @Column(name = "summary")
     @Setter
-    private String uploadedHtmlFilePath;
+    private String summary;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -50,10 +44,10 @@ public class Cv {
     @Column(name = "archived_at")
     private LocalDateTime archivedAt;
 
-    public Cv(UserAccount owner, String title, String uploadedHtmlFilePath) {
+    public Cv(UserAccount owner, String title) {
         this.owner = owner;
         this.title = title;
-        this.uploadedHtmlFilePath = uploadedHtmlFilePath;
+        // this.uploadedHtmlFilePath = uploadedHtmlFilePath;
     }
 
     @PrePersist
