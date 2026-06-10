@@ -1,18 +1,5 @@
 package com.example.cvmanager.cv.service;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Locale;
-
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
 import com.example.cvmanager.common.exception.NotFoundException;
 import com.example.cvmanager.cv.dto.CvCreateRequest;
 import com.example.cvmanager.cv.dto.CvResponse;
@@ -21,6 +8,17 @@ import com.example.cvmanager.cv.mapper.CvMapper;
 import com.example.cvmanager.cv.model.Cv;
 import com.example.cvmanager.cv.repository.CvRepository;
 import com.example.cvmanager.user.repository.UserRepository;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Locale;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class CvService {
@@ -46,9 +44,16 @@ public class CvService {
 
     @Transactional(readOnly = true)
     public List<CvResponse> listCvs() {
-        return cvRepository.findAll(Sort.by(Sort.Direction.DESC, "updatedAt")).stream()
+        return cvRepository.findByArchivedAtIsNull(updatedAtDescending()).stream()
                 .map(cvMapper::toResponse)
                 .toList();
+    }
+
+    @Transactional
+    public void archiveCv(Long id) {
+        Cv cv = findCv(id);
+        cv.archive();
+        cvRepository.save(cv);
     }
 
     @Transactional(readOnly = true)
@@ -195,12 +200,16 @@ public class CvService {
 
     @Transactional(readOnly = true)
     public Cv findCv(Long id) {
-        return cvRepository.findById(id)
+        return cvRepository.findByIdAndArchivedAtIsNull(id)
                 .orElseThrow(() -> new NotFoundException("CV not found", "CV_NOT_FOUND"));
     }
 
     private String normalizeLegacyText(String value) {
         return value.replace("\r\n", "\n").replace("\r", "\n").trim();
+    }
+
+    private Sort updatedAtDescending() {
+        return Sort.by(Sort.Direction.DESC, "updatedAt");
     }
 
     private String removeLegacyHeader(String value) {
