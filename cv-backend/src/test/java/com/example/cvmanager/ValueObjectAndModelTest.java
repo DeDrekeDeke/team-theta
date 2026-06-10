@@ -44,7 +44,7 @@ class ValueObjectAndModelTest {
     @Test
     void responseAndRequestRecordsExposeValues() {
         LocalDateTime now = LocalDateTime.now();
-        CvResponse cv = new CvResponse(1L, 2L, "alice@example.com", "Title", "file.html", now, now);
+        CvResponse cv = new CvResponse(1L, 2L, "alice@example.com", "Title", "file.html", now, now, null);
         UserResponse user = new UserResponse(2L, "alice@example.com", "Alice", false, now);
         AiSuggestionResponse suggestion = new AiSuggestionResponse(
                 3L,

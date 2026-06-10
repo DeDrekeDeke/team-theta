@@ -1,7 +1,8 @@
 package com.example.cvmanager.admin.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -12,44 +13,62 @@ import com.example.cvmanager.admin.repository.AppSettingRepository;
 import com.example.cvmanager.common.exception.NotFoundException;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.data.domain.Sort;
 
 class AdminSettingsServiceTest {
 
-    private final AppSettingRepository repository = mock(AppSettingRepository.class);
-    private final AdminSettingsService service = new AdminSettingsService(repository);
+    private AppSettingRepository appSettingRepository;
+    private AdminSettingsService adminSettingsService;
+
+    @BeforeEach
+    void setUp() {
+        appSettingRepository = mock(AppSettingRepository.class);
+        adminSettingsService = new AdminSettingsService(appSettingRepository);
+    }
 
     @Test
-    void listSettingsMapsSettingsSortedByKey() {
-        when(repository.findAll(Sort.by("key"))).thenReturn(List.of(
-                new AppSetting("application.displayName", "CV Manager", "Shown to users")));
+    void listSettingsReturnsSettingsSortedByKey() {
+        when(appSettingRepository.findAll(any(Sort.class))).thenReturn(List.of(
+                new AppSetting("ai.mockProviderEnabled", "true", "Mock AI enabled"),
+                new AppSetting("application.displayName", "CV Manager", "Display name")));
 
-        var settings = service.listSettings();
+        var response = adminSettingsService.listSettings();
 
-        assertThat(settings).hasSize(1);
-        assertThat(settings.get(0).key()).isEqualTo("application.displayName");
-        assertThat(settings.get(0).value()).isEqualTo("CV Manager");
+        assertEquals(2, response.size());
+        assertEquals("ai.mockProviderEnabled", response.get(0).key());
+        assertEquals("true", response.get(0).value());
+
+        ArgumentCaptor<Sort> sortCaptor = ArgumentCaptor.forClass(Sort.class);
+        verify(appSettingRepository).findAll(sortCaptor.capture());
+        assertEquals(Sort.Direction.ASC, sortCaptor.getValue().getOrderFor("key").getDirection());
     }
 
     @Test
     void updateSettingPersistsNewValue() {
-        AppSetting setting = new AppSetting("application.displayName", "CV Manager", "Shown to users");
-        when(repository.findById("application.displayName")).thenReturn(Optional.of(setting));
-        when(repository.save(setting)).thenReturn(setting);
+        AppSetting setting = new AppSetting("application.displayName", "CV Manager", "Display name");
+        when(appSettingRepository.findById("application.displayName")).thenReturn(Optional.of(setting));
+        when(appSettingRepository.save(setting)).thenReturn(setting);
 
-        var response = service.updateSetting("application.displayName", new AppSettingUpdateRequest("Hiring CV Manager"));
+        var response = adminSettingsService.updateSetting(
+                "application.displayName",
+                new AppSettingUpdateRequest("Candidate Portal"));
 
-        assertThat(response.value()).isEqualTo("Hiring CV Manager");
-        verify(repository).save(setting);
+        assertEquals("application.displayName", response.key());
+        assertEquals("Candidate Portal", response.value());
+        verify(appSettingRepository).save(setting);
     }
 
     @Test
-    void updateSettingThrowsWhenMissing() {
-        when(repository.findById("missing")).thenReturn(Optional.empty());
+    void updateSettingRejectsUnknownKey() {
+        when(appSettingRepository.findById("missing")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.updateSetting("missing", new AppSettingUpdateRequest("value")))
-                .isInstanceOfSatisfying(NotFoundException.class,
-                        exception -> assertThat(exception.getCode()).isEqualTo("SETTING_NOT_FOUND"));
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> adminSettingsService.updateSetting("missing", new AppSettingUpdateRequest("value")));
+
+        assertEquals("SETTING_NOT_FOUND", exception.getCode());
     }
 }

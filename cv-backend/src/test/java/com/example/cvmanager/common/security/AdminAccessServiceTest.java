@@ -1,6 +1,7 @@
 package com.example.cvmanager.common.security;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -37,8 +38,49 @@ class AdminAccessServiceTest {
     }
 
     @Test
+    void requireAdminAcceptsConfiguredAdminEmailEvenWhenAdminFlagIsFalse() {
+        UserAccount adminUser = new UserAccount("ADMIN@example.com", "Admin User", "hash", false);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(adminUser));
+
+        assertDoesNotThrow(() -> adminAccessService.requireAdmin("Bearer demo-token-1"));
+    }
+
+    @Test
     void requireAdminRejectsMissingAuthorizationHeader() {
-        assertThrows(UnauthorizedException.class, () -> adminAccessService.requireAdmin(null));
+        UnauthorizedException exception = assertThrows(
+                UnauthorizedException.class,
+                () -> adminAccessService.requireAdmin(null));
+
+        assertEquals("AUTH_REQUIRED", exception.getCode());
+    }
+
+    @Test
+    void requireAdminRejectsNonBearerAuthorizationHeader() {
+        UnauthorizedException exception = assertThrows(
+                UnauthorizedException.class,
+                () -> adminAccessService.requireAdmin("Basic demo-token-1"));
+
+        assertEquals("AUTH_INVALID", exception.getCode());
+    }
+
+    @Test
+    void requireAdminRejectsMalformedToken() {
+        UnauthorizedException exception = assertThrows(
+                UnauthorizedException.class,
+                () -> adminAccessService.requireAdmin("Bearer demo-token-not-a-number"));
+
+        assertEquals("AUTH_INVALID", exception.getCode());
+    }
+
+    @Test
+    void requireAdminRejectsTokenForMissingUser() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        UnauthorizedException exception = assertThrows(
+                UnauthorizedException.class,
+                () -> adminAccessService.requireAdmin("Bearer demo-token-99"));
+
+        assertEquals("AUTH_INVALID", exception.getCode());
     }
 
     @Test

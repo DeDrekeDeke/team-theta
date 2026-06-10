@@ -31,6 +31,7 @@ import com.example.cvmanager.common.exception.BadRequestException;
 import com.example.cvmanager.common.exception.GlobalExceptionHandler;
 import com.example.cvmanager.common.exception.NotFoundException;
 import com.example.cvmanager.common.health.HealthController;
+import com.example.cvmanager.common.security.AdminAccessService;
 import com.example.cvmanager.cv.controller.CvController;
 import com.example.cvmanager.cv.dto.CvCreateRequest;
 import com.example.cvmanager.cv.dto.CvResponse;
@@ -59,6 +60,7 @@ class ControllerWebTest {
     private CvService cvService;
     private AdminSettingsService adminSettingsService;
     private UserService userService;
+    private AdminAccessService adminAccessService;
     private AiApplicationService aiApplicationService;
     private MockMvc mockMvc;
 
@@ -68,6 +70,7 @@ class ControllerWebTest {
         cvService = mock(CvService.class);
         adminSettingsService = mock(AdminSettingsService.class);
         userService = mock(UserService.class);
+        adminAccessService = mock(AdminAccessService.class);
         aiApplicationService = mock(AiApplicationService.class);
 
         LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
@@ -77,7 +80,7 @@ class ControllerWebTest {
                         new AuthController(authService),
                         new CvController(cvService),
                         new AdminSettingsController(adminSettingsService),
-                        new UserController(userService),
+                        new UserController(adminAccessService, userService),
                         new AiController(aiApplicationService),
                         new HealthController(),
                         new ThrowingController())
@@ -111,7 +114,7 @@ class ControllerWebTest {
     @Test
     void cvControllerDelegatesReadSearchHtmlLegacyAndUploadEndpoints() throws Exception {
         LocalDateTime now = LocalDateTime.now();
-        CvResponse cv = new CvResponse(10L, 2L, "alice@example.com", "Alice CV", "uploads/alice.html", now, now);
+        CvResponse cv = new CvResponse(10L, 2L, "alice@example.com", "Alice CV", "uploads/alice.html", now, now, null);
         when(cvService.listCvs()).thenReturn(List.of(cv));
         when(cvService.searchCvs("alice")).thenReturn(List.of(cv));
         when(cvService.getCv(10L)).thenReturn(cv);
@@ -160,7 +163,7 @@ class ControllerWebTest {
     @Test
     void cvControllerDelegatesCreateUpdateAndValidationFailures() throws Exception {
         LocalDateTime now = LocalDateTime.now();
-        CvResponse cv = new CvResponse(11L, 2L, "alice@example.com", "New CV", "uploads/new.html", now, now);
+        CvResponse cv = new CvResponse(11L, 2L, "alice@example.com", "New CV", "uploads/new.html", now, now, null);
         when(cvService.createCv(any(CvCreateRequest.class))).thenReturn(cv);
         when(cvService.updateCv(eq(11L), any(CvUpdateRequest.class))).thenReturn(cv);
 
