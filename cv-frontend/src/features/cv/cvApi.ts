@@ -9,6 +9,7 @@ export type Cv = {
   uploadedHtmlFilePath: string;
   createdAt: string;
   updatedAt: string;
+  archivedAt: string | null;
 };
 
 export function listCvs() {
@@ -44,5 +45,22 @@ export function uploadCv(formData: FormData) {
   return apiRequest<Cv>('/api/cvs/upload', {
     method: 'POST',
     body: formData
+  });
+}
+
+export type CvUpdateRequest = {
+  title: string;
+  uploadedHtmlFilePath: string;
+}
+
+export function updateCv(id: number | string, request: CvUpdateRequest) {
+  return apiRequest<Cv>(`/api/cvs/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(request)});
+}
+
+export function archiveCv(id: number | string) {
+  return apiRequest<void>(`/api/cvs/${id}`, {
+    method: 'DELETE'
   });
 }
