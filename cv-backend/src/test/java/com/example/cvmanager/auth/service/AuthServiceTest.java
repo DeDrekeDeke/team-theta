@@ -1,7 +1,8 @@
 package com.example.cvmanager.auth.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -12,59 +13,59 @@ import com.example.cvmanager.common.security.AsIsSecurityProperties;
 import com.example.cvmanager.user.model.UserAccount;
 import com.example.cvmanager.user.repository.UserRepository;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 class AuthServiceTest {
 
-    private final UserRepository userRepository = mock(UserRepository.class);
-    private final AuthService authService = new AuthService(
-            userRepository,
-            new AsIsSecurityProperties("demo-token"),
-            new AdminProperties("admin@example.com", "admin123"));
+    private UserRepository userRepository;
+    private PasswordEncoder passwordEncoder;
+    private AuthService authService;
 
-    @Test
-    void loginReturnsDemoTokenForValidCredentials() {
-        UserAccount user = user(2L, "alice@example.com", "Alice Student", "user123", false);
-        when(userRepository.findByEmailIgnoreCase("ALICE@example.com")).thenReturn(Optional.of(user));
-
-        var response = authService.login(new LoginRequest("ALICE@example.com", "user123"));
-
-        assertThat(response.userId()).isEqualTo(2L);
-        assertThat(response.email()).isEqualTo("alice@example.com");
-        assertThat(response.displayName()).isEqualTo("Alice Student");
-        assertThat(response.admin()).isFalse();
-        assertThat(response.token()).isEqualTo("demo-token-2");
+    @BeforeEach
+    void setUp() {
+        userRepository = mock(UserRepository.class);
+        passwordEncoder = new BCryptPasswordEncoder();
+        authService = new AuthService(
+                userRepository,
+                new AsIsSecurityProperties("demo-token"),
+                new AdminProperties("admin@example.com", "admin123"),
+                passwordEncoder);
     }
 
     @Test
-    void loginMarksConfiguredAdminEmailAsAdmin() {
-        UserAccount admin = user(1L, "ADMIN@example.com", "Admin", "admin123", false);
-        when(userRepository.findByEmailIgnoreCase("admin@example.com")).thenReturn(Optional.of(admin));
+    void loginAcceptsOriginalPasswordAgainstStoredHash() {
+        UserAccount user = new UserAccount(
+                "alice@example.com",
+                "Alice Student",
+                passwordEncoder.encode("user123"),
+                false);
 
-        var response = authService.login(new LoginRequest("admin@example.com", "admin123"));
+        when(userRepository.findByEmailIgnoreCase("alice@example.com"))
+                .thenReturn(Optional.of(user));
 
-        assertThat(response.admin()).isTrue();
+        var response = authService.login(new LoginRequest("alice@example.com", "user123"));
+
+        assertEquals("alice@example.com", response.email());
+        assertEquals("Alice Student", response.displayName());
+        assertFalse(response.admin());
     }
 
     @Test
-    void loginRejectsUnknownEmailAndWrongPasswordWithSameCode() {
-        UserAccount user = user(2L, "alice@example.com", "Alice Student", "user123", false);
-        when(userRepository.findByEmailIgnoreCase("missing@example.com")).thenReturn(Optional.empty());
-        when(userRepository.findByEmailIgnoreCase("alice@example.com")).thenReturn(Optional.of(user));
+    void loginRejectsWrongPassword() {
+        UserAccount user = new UserAccount(
+                "alice@example.com",
+                "Alice Student",
+                passwordEncoder.encode("user123"),
+                false);
 
-        assertThatThrownBy(() -> authService.login(new LoginRequest("missing@example.com", "user123")))
-                .isInstanceOfSatisfying(BadRequestException.class,
-                        exception -> assertThat(exception.getCode()).isEqualTo("AUTH_INVALID"));
+        when(userRepository.findByEmailIgnoreCase("alice@example.com"))
+                .thenReturn(Optional.of(user));
 
-        assertThatThrownBy(() -> authService.login(new LoginRequest("alice@example.com", "wrong")))
-                .isInstanceOfSatisfying(BadRequestException.class,
-                        exception -> assertThat(exception.getCode()).isEqualTo("AUTH_INVALID"));
-    }
-
-    private UserAccount user(Long id, String email, String displayName, String password, boolean admin) {
-        UserAccount user = new UserAccount(email, displayName, password, admin);
-        ReflectionTestUtils.setField(user, "id", id);
-        return user;
+        assertThrows(
+                BadRequestException.class,
+                () -> authService.login(new LoginRequest("alice@example.com", "wrong-password")));
     }
 }

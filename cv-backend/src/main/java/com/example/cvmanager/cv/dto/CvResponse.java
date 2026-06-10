@@ -9,5 +9,6 @@ public record CvResponse(
         String title,
         String uploadedHtmlFilePath,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt) {
+        LocalDateTime updatedAt,
+        LocalDateTime archivedAt) {
 }

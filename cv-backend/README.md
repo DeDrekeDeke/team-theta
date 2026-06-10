@@ -24,6 +24,20 @@ cd cv-backend
 .\gradlew.bat bootRun
 ```
 
+Run tests:
+
+```bash
+cd cv-backend
+./gradlew test
+```
+
+On Windows PowerShell:
+
+```powershell
+cd cv-backend
+.\gradlew.bat test
+```
+
 The project targets Java 21 and includes a project-local Gradle wrapper.
 
 The backend runs at:
@@ -77,8 +91,23 @@ Admin/settings endpoints:
 ```text
 GET /api/admin/settings
 PUT /api/admin/settings/{key}
+POST /api/users
 GET /api/users
 GET /api/users/{id}
+```
+
+Admin user creation:
+
+```http
+POST /api/users
+Authorization: Bearer demo-token-1
+Content-Type: application/json
+
+{
+  "email": "carol@example.com",
+  "displayName": "Carol Candidate",
+  "password": "carol123"
+}
 ```
 
 AI placeholder endpoints:
@@ -95,3 +124,11 @@ SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/cvmanager
 SPRING_DATASOURCE_USERNAME=cvmanager
 SPRING_DATASOURCE_PASSWORD=cvmanager
 ```
+
+## Password Notes
+
+- Demo users are seeded in `src/main/resources/db/migration/V2__seed_data.sql`.
+- `src/main/resources/db/migration/V3__migrate_demo_user_password_hashes.sql` migrates those seeded plain-text passwords to BCrypt hashes and keeps the same demo credentials usable after migration.
+- New users created via `POST /api/users` are stored with BCrypt-hashed passwords.
+- Login verifies the submitted password against the stored hash.
+- User and login responses do not expose plain-text passwords or password hashes.
