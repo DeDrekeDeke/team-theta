@@ -82,4 +82,20 @@ class UserControllerTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("ADMIN_REQUIRED"));
     }
+
+    @Test
+    void createUserRejectsInvalidInput() throws Exception {
+        mockMvc.perform(post("/api/users")
+                        .header("Authorization", "Bearer demo-token-1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "not-an-email",
+                                  "displayName": " ",
+                                  "password": "short"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
+    }
 }
