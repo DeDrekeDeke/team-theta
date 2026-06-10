@@ -22,6 +22,18 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(exception.getMessage(), exception.getCode(), List.of()));
     }
 
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorized(UnauthorizedException exception) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.of(exception.getMessage(), exception.getCode(), List.of()));
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleForbidden(ForbiddenException exception) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(exception.getMessage(), exception.getCode(), List.of()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException exception) {
         List<String> details = exception.getBindingResult().getFieldErrors().stream()
