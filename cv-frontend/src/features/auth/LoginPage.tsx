@@ -4,6 +4,7 @@ import { Button } from '../../components/Button';
 import { ErrorMessage } from '../../components/ErrorMessage';
 import { FormField, TextInput } from '../../components/FormField';
 import { PageHeader } from '../../components/PageHeader';
+import { compactErrors, validateEmail, validatePassword } from '../../lib/validation';
 import { login } from './authApi';
 import { saveCurrentUser } from './authStore';
 
@@ -16,6 +17,16 @@ export function LoginPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const validationErrors = compactErrors([
+      validateEmail(email),
+      validatePassword(password)
+    ]);
+
+    if (validationErrors.length) {
+      setError(validationErrors.join('\n'));
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -33,14 +44,24 @@ export function LoginPage() {
   return (
     <section className="page-section narrow">
       <PageHeader title="Log in" description="Use one of the seeded demo users." />
-      <form className="form-stack" onSubmit={handleSubmit}>
+      <form className="form-stack" onSubmit={handleSubmit} noValidate>
         <FormField label="Email" htmlFor="email">
-          <TextInput id="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+          <TextInput
+            id="email"
+            type="email"
+            required
+            maxLength={255}
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
         </FormField>
         <FormField label="Password" htmlFor="password">
           <TextInput
             id="password"
             type="password"
+            required
+            minLength={6}
+            maxLength={255}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />

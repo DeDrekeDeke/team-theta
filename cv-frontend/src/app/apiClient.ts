@@ -27,7 +27,7 @@ function formatValidationDetail(detail: string) {
   return rawMessage ?? detail;
 }
 
-async function readErrorMessage(response: Response) {
+export async function readErrorMessage(response: Response) {
   const fallback = `Request failed with status ${response.status}`;
   const text = await response.text();
 

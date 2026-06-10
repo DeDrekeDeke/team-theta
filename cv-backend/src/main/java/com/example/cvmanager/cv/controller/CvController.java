@@ -16,6 +16,9 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/cvs")
 public class CvController {
 
+    private static final String CV_HTML_CONTENT_SECURITY_POLICY =
+            "default-src 'none'; img-src data: http: https:; style-src 'unsafe-inline'; font-src data:; sandbox";
+
     private final CvService cvService;
 
     public CvController(CvService cvService) {
@@ -41,6 +44,8 @@ public class CvController {
     public ResponseEntity<String> getCvHtml(@PathVariable Long id) {
         return ResponseEntity.ok()
                 .contentType(MediaType.TEXT_HTML)
+                .header("Content-Security-Policy", CV_HTML_CONTENT_SECURITY_POLICY)
+                .header("X-Content-Type-Options", "nosniff")
                 .body(cvService.getUploadedHtml(id));
     }
 

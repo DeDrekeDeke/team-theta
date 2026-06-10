@@ -257,6 +257,15 @@ tr:last-child td {
   background: #ffffff;
 }
 
+.html-preview-frame {
+  width: 100%;
+  min-height: 520px;
+  margin-top: 10px;
+  border: 1px solid #d9dee3;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
 .action-list {
   display: grid;
   gap: 8px;
