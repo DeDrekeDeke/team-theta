@@ -6,5 +6,5 @@ import jakarta.validation.constraints.NotNull;
 public record CvCreateRequest(
         @NotNull Long ownerUserId,
         @NotBlank String title,
-        @NotBlank String uploadedHtmlFilePath) {
+        String summary) {
 }

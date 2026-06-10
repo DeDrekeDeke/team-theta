@@ -4,5 +4,5 @@ import jakarta.validation.constraints.NotBlank;
 
 public record CvUpdateRequest(
         @NotBlank String title,
-        @NotBlank String uploadedHtmlFilePath) {
+        String summary) {
 }

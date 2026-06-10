@@ -13,7 +13,7 @@ public class CvMapper {
                 cv.getOwner().getId(),
                 cv.getOwner().getEmail(),
                 cv.getTitle(),
-                cv.getUploadedHtmlFilePath(),
+                cv.getSummary(),
                 cv.getCreatedAt(),
                 cv.getUpdatedAt(),
                 cv.getArchivedAt());

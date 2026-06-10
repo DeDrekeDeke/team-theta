@@ -7,7 +7,7 @@ public record CvResponse(
         Long ownerUserId,
         String ownerEmail,
         String title,
-        String uploadedHtmlFilePath,
+        String summary,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         LocalDateTime archivedAt) {
