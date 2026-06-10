@@ -32,19 +32,6 @@ public class CvService {
     private final EntityManager entityManager;
     private final CvStorageProperties storageProperties;
 
-//    public CvService(
-//            CvRepository cvRepository,
-//            UserRepository userRepository,
-//            CvMapper cvMapper,
-//            EntityManager entityManager,
-//            CvStorageProperties storageProperties) {
-//        this.cvRepository = cvRepository;
-//        this.userRepository = userRepository;
-//        this.cvMapper = cvMapper;
-//        this.entityManager = entityManager;
-//        this.storageProperties = storageProperties;
-//    }
-
     @Transactional(readOnly = true)
     public List<CvResponse> listCvs() {
         return cvRepository.findByArchivedAtIsNull(updatedAtDescending()).stream() // TODO add sorting by update time
