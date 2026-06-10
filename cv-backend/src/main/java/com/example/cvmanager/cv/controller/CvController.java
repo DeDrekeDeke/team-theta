@@ -37,6 +37,7 @@ public class CvController {
         return cvService.getCv(id);
     }
 
+    // IMPORTANT: functionality no longer supported, methods preserved for documentation purposes.
     @GetMapping(value = "/{id}/html", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> getCvHtml(@PathVariable Long id) {
         return ResponseEntity.ok()
@@ -50,6 +51,7 @@ public class CvController {
         return cvService.createCv(request);
     }
 
+    // IMPORTANT: functionality no longer supported, methods preserved for documentation purposes.
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public CvResponse uploadCv(
