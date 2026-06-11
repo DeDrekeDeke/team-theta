@@ -16,6 +16,7 @@ export const router = createBrowserRouter([
       { path: 'upload', element: <CvUploadPage /> },
       { path: 'cvs/:id', element: <CvDetailPage /> },
       { path: 'admin/settings', element: <SettingsPage /> }
-    ]
+    ],
   }
-]);
+],
+{ basename: '/team-theta' });
