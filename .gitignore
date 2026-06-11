@@ -1,0 +1,38 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Java / Spring Boot
+target/
+build/
+out/
+.gradle/
+*.class
+
+# Node / React
+node_modules/
+dist/
+coverage/
+.vite/
+
+# IDEs and editors
+.idea/
+.vscode/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker/local data
+*.pid
+
+# Runtime CV uploads, except committed demo files
+cv-backend/uploads/*
+!cv-backend/uploads/alice-cv.html
+!cv-backend/uploads/bob-cv.html
