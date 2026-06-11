@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
-  "homepage": "https://DeDrekeDeke.github.io/team-theta>",
+  "homepage": "https://DeDrekeDeke.github.io/team-theta/",
   "scripts": {
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
