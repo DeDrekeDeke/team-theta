@@ -5,9 +5,11 @@ spring:
   application:
     name: cv-manager-backend
   datasource:
-      url: ${SPRING_DATASOURCE_URL}
-      username: ${SPRING_DATASOURCE_USERNAME}
-      password: ${SPRING_DATASOURCE_PASSWORD}
+    spring:
+      datasource:
+        url: ${SPRING_DATASOURCE_URL:NOT_SET}
+        username: ${SPRING_DATASOURCE_USERNAME:NOT_SET}
+        password: ${SPRING_DATASOURCE_PASSWORD:NOT_SET}
   flyway:
     enabled: true
   jpa:
