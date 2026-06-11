@@ -28,23 +28,12 @@ public class SecurityConfig {
     }
 
     @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                    .allowedOrigins("https://dedrekedeke.github.io")
-                    .allowedMethods("GET", "POST", "PUT", "DELETE");
-            }
-        };
-    }
-
-    @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:5173",
-                "http://127.0.0.1:5173"));
+                "http://127.0.0.1:5173",
+                "https://dedrekedeke.github.io"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Content-Type"));
