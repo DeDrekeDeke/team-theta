@@ -125,6 +125,36 @@ SPRING_DATASOURCE_USERNAME=cvmanager
 SPRING_DATASOURCE_PASSWORD=cvmanager
 ```
 
+`SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, and
+`SPRING_DATASOURCE_PASSWORD` can still be used to override these values. When
+those are not set, the application builds the JDBC connection from PostgreSQL
+environment variables:
+
+```text
+PGHOST=localhost
+PGPORT=5432
+PGDATABASE=cvmanager
+PGUSER=cvmanager
+PGPASSWORD=cvmanager
+```
+
+## Railway PostgreSQL
+
+If the backend is deployed to Railway, add a PostgreSQL database service and set
+these variables on the backend service using Railway variable references:
+
+```text
+PGHOST=${{Postgres.PGHOST}}
+PGPORT=${{Postgres.PGPORT}}
+PGDATABASE=${{Postgres.PGDATABASE}}
+PGUSER=${{Postgres.PGUSER}}
+PGPASSWORD=${{Postgres.PGPASSWORD}}
+```
+
+If your Railway database service has a different name than `Postgres`, use that
+service name in the variable references. Without these variables, the backend
+falls back to `localhost:5432`, which will fail inside Railway.
+
 ## Password Notes
 
 - Demo users are seeded in `src/main/resources/db/migration/V2__seed_data.sql`.

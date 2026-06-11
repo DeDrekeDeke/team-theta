@@ -28,3 +28,6 @@ Override it with:
 ```text
 VITE_API_BASE_URL=http://localhost:8080
 ```
+
+The GitHub Pages production build reads `VITE_API_BASE_URL` from
+`.env.production`.
