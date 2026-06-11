@@ -5,9 +5,9 @@ spring:
   application:
     name: cv-manager-backend
   datasource:
-    url: "jdbc:postgresql://${PGHOST:${POSTGRES_HOST:localhost}}:${PGPORT:${POSTGRES_PORT:5432}}/${PGDATABASE:${POSTGRES_DB:cvmanager}}"
-    username: "${PGUSER:${POSTGRES_USER:cvmanager}}"
-    password: "${PGPASSWORD:${POSTGRES_PASSWORD:cvmanager}}"
+      url: ${SPRING_DATASOURCE_URL}
+      username: ${SPRING_DATASOURCE_USERNAME}
+      password: ${SPRING_DATASOURCE_PASSWORD}
   flyway:
     enabled: true
   jpa:
