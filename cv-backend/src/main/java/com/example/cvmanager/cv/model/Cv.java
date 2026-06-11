@@ -13,9 +13,15 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "cv")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Cv {
 
     @Id
@@ -24,12 +30,15 @@ public class Cv {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_user_id", nullable = false)
+    @Setter
     private UserAccount owner;
 
     @Column(nullable = false)
+    @Setter
     private String title;
 
     @Column(name = "uploaded_html_file_path", nullable = false, length = 500)
+    @Setter
     private String uploadedHtmlFilePath;
 
     @Column(name = "created_at", nullable = false)
@@ -38,8 +47,8 @@ public class Cv {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    protected Cv() {
-    }
+    @Column(name = "archived_at")
+    private LocalDateTime archivedAt;
 
     public Cv(UserAccount owner, String title, String uploadedHtmlFilePath) {
         this.owner = owner;
@@ -63,39 +72,15 @@ public class Cv {
         updatedAt = LocalDateTime.now();
     }
 
-    public Long getId() {
-        return id;
+    public void archive() {
+        archivedAt = LocalDateTime.now();
     }
 
-    public UserAccount getOwner() {
-        return owner;
+    public void restore() {
+        archivedAt = null;
     }
 
-    public void setOwner(UserAccount owner) {
-        this.owner = owner;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getUploadedHtmlFilePath() {
-        return uploadedHtmlFilePath;
-    }
-
-    public void setUploadedHtmlFilePath(String uploadedHtmlFilePath) {
-        this.uploadedHtmlFilePath = uploadedHtmlFilePath;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
+    public boolean isArchived() {
+        return archivedAt != null;
     }
 }

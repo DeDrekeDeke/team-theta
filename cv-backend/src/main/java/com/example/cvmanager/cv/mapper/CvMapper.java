@@ -15,6 +15,7 @@ public class CvMapper {
                 cv.getTitle(),
                 cv.getUploadedHtmlFilePath(),
                 cv.getCreatedAt(),
-                cv.getUpdatedAt());
+                cv.getUpdatedAt(),
+                cv.getArchivedAt());
     }
 }
