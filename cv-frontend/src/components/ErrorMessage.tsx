@@ -3,5 +3,5 @@ type ErrorMessageProps = {
 };
 
 export function ErrorMessage({ message }: ErrorMessageProps) {
-  return <p className="error-message">{message}</p>;
+  return <p className="error-message" role="alert">{message}</p>;
 }

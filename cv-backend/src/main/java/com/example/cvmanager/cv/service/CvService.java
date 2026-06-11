@@ -1,5 +1,6 @@
 package com.example.cvmanager.cv.service;
 
+import com.example.cvmanager.common.exception.BadRequestException;
 import com.example.cvmanager.common.exception.NotFoundException;
 import com.example.cvmanager.cv.dto.CvCreateRequest;
 import com.example.cvmanager.cv.dto.CvResponse;
@@ -14,20 +15,39 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
-
-import lombok.RequiredArgsConstructor;
+import java.util.Locale;
+import java.util.regex.Pattern;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-@Service @RequiredArgsConstructor
+@Service
 public class CvService {
 
     private final CvRepository cvRepository;
     private final UserRepository userRepository;
     private final CvMapper cvMapper;
     private final CvStorageProperties storageProperties;
+
+    private static final int MAX_TITLE_LENGTH = 255;
+    private static final long MAX_HTML_UPLOAD_BYTES = 1_000_000;
+    private static final Pattern UNSAFE_HTML_PATTERN = Pattern.compile(
+            "(?is)<\\s*(script|iframe|object|embed|base|form|input|button|textarea|select|option|meta|link)\\b"
+                    + "|\\son[a-z0-9_-]+\\s*="
+                    + "|\\ssrcdoc\\s*="
+                    + "|(?:href|src|xlink:href)\\s*=\\s*(['\"]?)\\s*(javascript:|data:text/html|vbscript:)");
+
+    public CvService(
+            CvRepository cvRepository,
+            UserRepository userRepository,
+            CvMapper cvMapper,
+            CvStorageProperties storageProperties) {
+        this.cvRepository = cvRepository;
+        this.userRepository = userRepository;
+        this.cvMapper = cvMapper;
+        this.storageProperties = storageProperties;
+    }
 
     @Transactional(readOnly = true)
     public List<CvResponse> listCvs() {
@@ -78,38 +98,44 @@ public class CvService {
 
     @Transactional
     public CvResponse uploadHtmlCv(Long ownerUserId, String submittedTitle, MultipartFile file) {
-        String a = submittedTitle;
-        MultipartFile b = file;
-        Long c = ownerUserId;
-        if (c == null) {
-            throw new com.example.cvmanager.common.exception.BadRequestException("Owner user is required", "OWNER_REQUIRED");
+        String title = submittedTitle;
+        MultipartFile upload = file;
+        Long ownerId = ownerUserId;
+        if (ownerId == null) {
+            throw new BadRequestException("Owner user is required", "OWNER_REQUIRED");
         }
-        if (b == null || b.isEmpty()) {
-            throw new com.example.cvmanager.common.exception.BadRequestException("HTML file is required", "CV_FILE_REQUIRED");
+        if (ownerId <= 0) {
+            throw new BadRequestException("Owner user id must be positive", "OWNER_INVALID");
         }
-        String original = b.getOriginalFilename();
-        String contentType = b.getContentType();
+        if (upload == null || upload.isEmpty()) {
+            throw new BadRequestException("HTML file is required", "CV_FILE_REQUIRED");
+        }
+        if (upload.getSize() > MAX_HTML_UPLOAD_BYTES) {
+            throw new BadRequestException("HTML file is too large", "CV_FILE_TOO_LARGE");
+        }
+        String original = upload.getOriginalFilename();
+        String contentType = upload.getContentType();
         boolean looksHtml = false;
-        if (original != null && original.toLowerCase().endsWith(".html")) {
+        if (original != null && original.toLowerCase(Locale.ROOT).endsWith(".html")) {
             looksHtml = true;
         }
-        if (original != null && original.toLowerCase().endsWith(".htm")) {
+        if (original != null && original.toLowerCase(Locale.ROOT).endsWith(".htm")) {
             looksHtml = true;
         }
-        if (contentType != null && contentType.toLowerCase().contains("html")) {
+        if (contentType != null && contentType.toLowerCase(Locale.ROOT).contains("html")) {
             looksHtml = true;
         }
         if (!looksHtml) {
-            throw new com.example.cvmanager.common.exception.BadRequestException("Only HTML files are accepted", "CV_FILE_TYPE");
+            throw new BadRequestException("Only HTML files are accepted", "CV_FILE_TYPE");
         }
-        var owner = userRepository.findById(c)
+        var owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Owner user not found", "USER_NOT_FOUND"));
         try {
-            byte[] rawBytes = b.getBytes();
+            byte[] rawBytes = upload.getBytes();
             String html = new String(rawBytes, StandardCharsets.UTF_8);
-            String title = a;
+            rejectUnsafeHtml(html);
             if (title == null || title.isBlank()) {
-                String lower = html.toLowerCase();
+                String lower = html.toLowerCase(Locale.ROOT);
                 int start = lower.indexOf("<title>");
                 int end = lower.indexOf("</title>");
                 if (start >= 0 && end > start) {
@@ -121,6 +147,13 @@ public class CvService {
                 if (title == null || title.isBlank()) {
                     title = "Uploaded CV";
                 }
+            }
+            title = title.trim();
+            if (title.length() > MAX_TITLE_LENGTH) {
+                throw new BadRequestException(
+                    "CV title must be 255 characters or fewer",
+                    "CV_TITLE_TOO_LONG"
+                );
             }
             String cleaned = original == null ? "cv.html" : original;
             cleaned = cleaned.replace("\\", "/");
@@ -140,13 +173,13 @@ public class CvService {
                     .replace("T", "-");
             Path dir = Path.of(storageProperties.uploadDir());
             Files.createDirectories(dir);
-            Path target = dir.resolve(c + "-" + stamp + "-" + cleaned);
+            Path target = dir.resolve(ownerId + "-" + stamp + "-" + cleaned);
             Files.writeString(target, html, StandardCharsets.UTF_8);
             Cv cv = new Cv(owner, title, target.toString().replace("\\", "/"));
             Cv saved = cvRepository.save(cv);
             return cvMapper.toResponse(saved);
         } catch (IOException exception) {
-            throw new com.example.cvmanager.common.exception.BadRequestException("Could not save uploaded CV", "CV_UPLOAD_FAILED");
+            throw new BadRequestException("Could not save uploaded CV", "CV_UPLOAD_FAILED");
         }
     }
 
@@ -165,8 +198,8 @@ public class CvService {
         String value = input == null ? "" : input;
         String normalized = normalizeLegacyText(value);
         String withoutHeader = removeLegacyHeader(normalized);
-        String name = guessLegacyName(withoutHeader);
-        String body = convertLegacyLines(withoutHeader);
+        String name = escapeHtml(guessLegacyName(withoutHeader));
+        String body = convertLegacyLines(escapeHtml(withoutHeader));
         return "<html><body><h1>" + name + "</h1><div>" + body + "</div></body></html>";
     }
 
@@ -182,6 +215,12 @@ public class CvService {
 
     private Sort updatedAtDescending() {
         return Sort.by(Sort.Direction.DESC, "updatedAt");
+    }
+
+    private void rejectUnsafeHtml(String html) {
+        if (UNSAFE_HTML_PATTERN.matcher(html).find()) {
+            throw new BadRequestException("HTML file contains unsafe content", "CV_FILE_UNSAFE");
+        }
     }
 
     private String removeLegacyHeader(String value) {
@@ -201,5 +240,14 @@ public class CvService {
 
     private String convertLegacyLines(String value) {
         return value.replace("\n", "<br>");
+    }
+
+    private String escapeHtml(String value) {
+        return value
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#39;");
     }
 }

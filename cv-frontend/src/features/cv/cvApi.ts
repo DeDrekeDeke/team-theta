@@ -1,4 +1,4 @@
-import { apiRequest, API_BASE_URL } from '../../app/apiClient';
+import { apiRequest, API_BASE_URL, readErrorMessage } from '../../app/apiClient';
 import { getAuthToken } from '../auth/authStore';
 
 export type Cv = {
@@ -35,7 +35,7 @@ export async function getCvHtml(id: number | string) {
   });
 
   if (!response.ok) {
-    throw new Error(`Could not load uploaded HTML: ${response.status}`);
+    throw new Error(await readErrorMessage(response));
   }
 
   return response.text();

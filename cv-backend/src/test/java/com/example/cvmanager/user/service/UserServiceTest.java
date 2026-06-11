@@ -5,21 +5,22 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.example.cvmanager.common.exception.BadRequestException;
-import com.example.cvmanager.user.dto.UserCreateRequest;
-import com.example.cvmanager.user.model.UserAccount;
-import com.example.cvmanager.user.repository.UserRepository;
 import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import com.example.cvmanager.common.exception.BadRequestException;
+import com.example.cvmanager.user.dto.UserCreateRequest;
+import com.example.cvmanager.user.model.UserAccount;
+import com.example.cvmanager.user.repository.UserRepository;
 
 class UserServiceTest {
 
