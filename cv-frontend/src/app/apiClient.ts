@@ -30,7 +30,6 @@ function formatValidationDetail(detail: string) {
 export async function readErrorMessage(response: Response) {
   const fallback = `Request failed with status ${response.status}`;
   const text = await response.text();
-
   if (!text) {
     return fallback;
   }
@@ -69,12 +68,8 @@ export async function apiRequest<T>(
   });
 
   if (!response.ok) {
-<<<<<<< HEAD
     const message = await readErrorMessage(response);
     throw new Error(message || `Request failed with status ${response.status}`);
-=======
-    throw new Error(await readErrorMessage(response));
->>>>>>> 309cfcbb016be6d0395fb570a7842721958f547a
   }
 
   if (response.status === 204) {
@@ -84,17 +79,3 @@ export async function apiRequest<T>(
   return response.json() as Promise<T>;
 }
 
-async function readErrorMessage(response: Response) {
-  const text = await response.text();
-  if (!text) {
-    return '';
-  }
-
-  try {
-    const parsed = JSON.parse(text) as { message?: string; details?: string[] };
-    const details = parsed.details?.length ? ` ${parsed.details.join(' ')}` : '';
-    return `${parsed.message ?? ''}${details}`.trim();
-  } catch {
-    return text;
-  }
-}
